@@ -94,17 +94,17 @@ jobs:
        clean:  'false'  # 'false' 默认值
        prefix: ${{ github.workspace }}/openwrt
     
-    - name: luci-app-openclash install
-      run: |
-        cd openwrt
-        mkdir package/luci-app-openclash
-        cd package/luci-app-openclash
-        git init
-        git remote add -f origin https://github.com/vernesong/OpenClash.git
-        git config core.sparsecheckout true
-        echo "luci-app-openclash" >> .git/info/sparse-checkout
-        git pull --depth 1 origin master
-        git branch --set-upstream-to=origin/master 
+    # - name: luci-app-openclash install
+    #   run: |
+    #     cd openwrt
+    #     mkdir package/luci-app-openclash
+    #     cd package/luci-app-openclash
+    #     git init
+    #     git remote add -f origin https://github.com/vernesong/OpenClash.git
+    #     git config core.sparsecheckout true
+    #     echo "luci-app-openclash" >> .git/info/sparse-checkout
+    #     git pull --depth 1 origin master
+    #     git branch --set-upstream-to=origin/master 
     
     - name: luci-app-romupdate
       run: |
@@ -198,10 +198,10 @@ jobs:
         name: OpenWrt_bin${{ env.DEVICE_NAME }}${{ env.FILE_DATE }}
         path: openwrt/bin
    
-    - name: delete files
-      run: |
-        cd openwrt 
-        bash  rename.sh
+    # - name: delete files
+    #   run: |
+    #     cd openwrt 
+    #     bash  rename.sh
     
 
     - name: Organize files
@@ -249,8 +249,8 @@ jobs:
         git -C openwrt/feeds/routing log --pretty=format:"%s(#By %an)"  --graph --since=3.hour >> release.txt
         git -C openwrt/feeds/telephony log --pretty=format:"%s(#By %an)"  --graph --since=3.hour >> release.txt
         git -C openwrt/feeds/helloworld log --pretty=format:"%s(#By %an)"  --graph --since=4.hour >> release.txt
-        git -C openwrt/feeds/passwall log --pretty=format:"%s(#By %an)"  --graph --since=8.hour >> release.txt
-        git -C openwrt/package/luci-app-openclash log --pretty=format:"%s(#By %an)"  --graph --since=8.hour >> release.txt
+#        git -C openwrt/feeds/passwall log --pretty=format:"%s(#By %an)"  --graph --since=8.hour >> release.txt
+#        git -C openwrt/package/luci-app-openclash log --pretty=format:"%s(#By %an)"  --graph --since=8.hour >> release.txt
         test  ! -s release.txt && echo -e "\n* The source code is not updated." >> release.txt
         sed -i '1i ## Firmware Update Log' release.txt
         touch release.txt
