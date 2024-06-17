@@ -92,7 +92,7 @@ jobs:
         
     - name: Trigger build
       if: steps.cacheHash.outputs.cache-hit != 'true'
-      uses: peter-evans/repository-dispatch@main
+      uses: peter-evans/repository-dispatch@v3
       with:
         token: ${{ secrets.ACCESS_TOKEN }}
         event-type: openwrt_source_update
