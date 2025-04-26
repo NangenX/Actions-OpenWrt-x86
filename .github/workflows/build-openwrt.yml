@@ -41,7 +41,7 @@ env:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
 
@@ -69,10 +69,7 @@ jobs:
       env:
         DEBIAN_FRONTEND: noninteractive
       run: |
-        sudo rm -rf /etc/apt/sources.list.d/* /usr/share/dotnet /usr/local/lib/android /opt/ghc
-        sudo -E apt-get -qq update
-        sudo -E apt-get -qq full-upgrade
-        sudo -E apt-get -qq install ack antlr3 asciidoc autoconf automake autopoint binutils bison build-essential bzip2 ccache cmake cpio curl device-tree-compiler fastjar flex gawk gettext gcc-multilib g++-multilib git gperf haveged help2man intltool libc6-dev-i386 libelf-dev libglib2.0-dev libgmp3-dev libltdl-dev libmpc-dev libmpfr-dev libncurses5-dev libncursesw5-dev libreadline-dev libssl-dev libtool lrzsz mkisofs msmtp nano ninja-build p7zip p7zip-full patch pkgconf python2.7 python3 python3-pyelftools libpython3-dev qemu-utils rsync scons squashfs-tools subversion swig texinfo uglifyjs upx-ucl unzip vim wget xmlto xxd zlib1g-dev
+        sudo bash -c 'bash <(curl -s https://build-scripts.immortalwrt.org/init_build_environment.sh)'
         sudo -E apt-get -qq autoremove --purge
         sudo -E apt-get -qq clean
         sudo timedatectl set-timezone "$TZ"
@@ -107,25 +104,25 @@ jobs:
     #     git pull --depth 1 origin master
     #     git branch --set-upstream-to=origin/master 
     
-    - name: luci-app-romupdate
-      run: |
-        cd openwrt/package    
-        git clone -b dev https://github.com/Blueplanet20120/luci-app-romupdate.git
+    # - name: luci-app-romupdate
+    #   run: |
+    #     cd openwrt/package    
+    #     git clone -b dev https://github.com/Blueplanet20120/luci-app-romupdate.git
     
-    - name: luci-theme-design
-      run: |
-        cd openwrt/package 		
-        git clone https://github.com/gngpp/luci-theme-design.git luci-theme-design
+    # - name: luci-theme-design
+    #   run: |
+    #     cd openwrt/package 		
+    #     git clone https://github.com/gngpp/luci-theme-design.git luci-theme-design
         
-    - name: aliyundrive-webdav
-      run: |
-        cd openwrt/package 
-        git clone https://github.com/messense/aliyundrive-webdav.git
+    # - name: aliyundrive-webdav
+    #   run: |
+    #     cd openwrt/package 
+    #     git clone https://github.com/messense/aliyundrive-webdav.git
        
-    - name: luci-app-frpc
-      run: |
-        cd openwrt/package 
-        git clone https://github.com/kuoruan/luci-app-frpc.git
+    # - name: luci-app-frpc
+    #   run: |
+    #     cd openwrt/package 
+    #     git clone https://github.com/kuoruan/luci-app-frpc.git
         
     #- name: luci-app-adguardhome
       #run: |
@@ -152,13 +149,13 @@ jobs:
     - name: Install feeds
       run: cd openwrt && ./scripts/feeds install -a
 
-    - name: Load custom configuration
-      run: |
-        [ -e files ] && mv files openwrt/files
-        [ -e $CONFIG_FILE ] && mv $CONFIG_FILE openwrt/.config
-        chmod +x $DIY_P2_SH
-        cd openwrt
-        $GITHUB_WORKSPACE/$DIY_P2_SH
+    # - name: Load custom configuration
+    #   run: |
+    #     [ -e files ] && mv files openwrt/files
+    #     [ -e $CONFIG_FILE ] && mv $CONFIG_FILE openwrt/.config
+    #     chmod +x $DIY_P2_SH
+    #     cd openwrt
+    #     $GITHUB_WORKSPACE/$DIY_P2_SH
 
     - name: SSH connection to Actions
       uses: P3TERX/ssh2actions@v1.0.0
@@ -243,13 +240,15 @@ jobs:
       id: tag
       if: env.UPLOAD_RELEASE == 'true' && !cancelled()
       run: |
-        echo "release_tag=$FILE_DATE" >> $GITHUB_OUTPUT
+        echo "release_tag=$(cat openwrt/wget/op_version1)" >> $GITHUB_OUTPUT
         git -C openwrt log --pretty=format:"%s(#By %an)"  --graph --since=3.hour >> release.txt
         git -C openwrt/feeds/packages log --pretty=format:"%s(#By %an)"  --graph --since=3.hour >> release.txt
         git -C openwrt/feeds/luci log --pretty=format:"%s(#By %an)"  --graph --since=3.hour >> release.txt
         git -C openwrt/feeds/routing log --pretty=format:"%s(#By %an)"  --graph --since=3.hour >> release.txt
         git -C openwrt/feeds/telephony log --pretty=format:"%s(#By %an)"  --graph --since=3.hour >> release.txt
         git -C openwrt/feeds/helloworld log --pretty=format:"%s(#By %an)"  --graph --since=4.hour >> release.txt
+        git -C openwrt/feeds/passwall log --pretty=format:"%s(#By %an)"  --graph --since=8.hour >> release.txt
+        git -C openwrt/package/luci-app-openclash log --pretty=format:"%s(#By %an)"  --graph --since=8.hour >> release.txt
         test  ! -s release.txt && echo -e "\n* The source code is not updated." >> release.txt
         sed -i '1i ## Firmware Update Log' release.txt
         touch release.txt
@@ -258,10 +257,10 @@ jobs:
         echo "status=success" >> $GITHUB_OUTPUT
 
     - name: Upload firmware to release
-      uses: softprops/action-gh-release@master
+      uses: softprops/action-gh-release@v2
       if: steps.tag.outputs.status == 'success' && !cancelled()
       env:
-        GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         tag_name: ${{ steps.tag.outputs.release_tag }}
         body_path: release.txt
